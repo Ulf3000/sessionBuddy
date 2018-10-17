@@ -123,7 +123,7 @@ async function startup(data, reason) {
 	let entry = {};
 	entry.name = name;
 	entry.count = "(" + xxx.windows.length + "/" + tabCount + ")";
-	entry.date = new Date(xxx.session.lastUpdate).toLocaleString("de-DE");
+	entry.date = new Date(xxx.session.lastUpdate).toLocaleString();
 	sessionsDataBase.backupedSessions.push(entry);
 
 	OS.File.writeAtomic(newBackupFile, newBackupData, {
