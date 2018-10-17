@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+-->
+<!DOCTYPE html [ 
+  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+  <!ENTITY % netErrorDTD SYSTEM "chrome://global/locale/netError.dtd">
+  %netErrorDTD;
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+  <!ENTITY % restorepageDTD SYSTEM "chrome://browser/locale/aboutSessionRestore.dtd">
+  %restorepageDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <head>
+    <title>&restorepage.tabtitle;</title>
+    <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" type="text/css" media="all"/>
+    <link rel="stylesheet" href="chrome://browser/skin/aboutSessionRestore.css" type="text/css" media="all"/>
+    <link rel="icon" type="image/png" href="chrome://global/skin/icons/warning-16.png"/>
+
+    <script type="application/javascript" src="chrome://sessionBuddy/content/aboutSessionRestore.js"/>
+  </head>
+
+  <body dir="&locale.dir;">
+
+    <div class="container restore-chosen" style="width:-moz-available;height:-moz-available;">
+
+      <div class="title">
+        <h1 class="title-text">Edit Session</h1>
+      </div>
+	        <div class="description">
+        <p></p>
+
+        <div id="errorLongDesc">
+          
+          
+        </div>
+      </div>
+
+      <div class="tree-container" available="true" style="visibility: visible;">
+        <xul:tree id="tabList" seltype="single" hidecolumnpicker="true"
+              onclick="onListClick(event);" onkeydown="onListKeyDown(event);"
+              _window_label="&restorepage.windowLabel;">
+          <xul:treecols>
+            <xul:treecol cycler="true" id="restore" type="checkbox" label="&restorepage.restoreHeader;"/>
+            <xul:splitter class="tree-splitter"/>
+            <xul:treecol primary="true" id="title" label="&restorepage.listHeader;" flex="1"/>
+          </xul:treecols>
+          <xul:treechildren flex="1"/>
+        </xul:tree>
+      </div>
+      <div class="button-container">
+        <xul:button class="primary"
+                id="errorTryAgain"
+                label="Save Session"
+                accesskey="S"
+                />
+      </div>
+      <!-- holds the session data for when the tab is closed -->
+      <input type="text" id="sessionData" style="display: none;"/>
+    </div>
+  <div id="stateStringContainer"></div>
+  </body>
+</html>
