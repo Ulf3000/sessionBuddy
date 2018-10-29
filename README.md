@@ -18,3 +18,5 @@ https://forum.mozilla-russia.org/viewtopic.php?id=57048
 but i replaced everything with up to date librarys n stuff and added some bells n whistles.. so its also compatible up to ff64 and works together with multiple windows ..
 
 private windows are not saved ! 
+
+it doesnt have any removal functions(cause im too lazy) so if you wanna deinstall it you have to either restart the browser or just wait till you restart anyways ...
