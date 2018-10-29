@@ -135,8 +135,6 @@ Services.obs.addObserver(hhhObserver, "quit-application", false);
 	} catch(err) {
 		console.log("2 recoveryFile");
 		try {
-			
-			
 			newBackupData = await OS.File.read(recoveryFile, {
 				encoding: "utf-8",
 				compression: "lz4"
@@ -144,8 +142,7 @@ Services.obs.addObserver(hhhObserver, "quit-application", false);
 		} catch(err) {
 			console.log("3 failStateFile");
 			newBackupData = await OS.File.read(failStateFile, {
-				encoding: "utf-8",
-				compression: "lz4"
+				encoding: "utf-8"
 			});
 		}
 	}
