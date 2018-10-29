@@ -15,8 +15,9 @@ let sessionDir = OS.Path.join(sessionBuddyDir, "savedSessions");
 let sessionsDataBaseFile = OS.Path.join(sessionBuddyDir, "sessionBuddyDataBase.json");
 let backupSessionsDir = OS.Path.join(sessionBuddyDir, "backupSessions");
 let recoveryDir = OS.Path.join(profDir, "sessionstore-backups");
-let recoveryFile = OS.Path.join(recoveryDir, "previous.jsonlz4");
-let backupFile = OS.Path.join(recoveryDir, "recovery.jsonlz4");
+let recoveryFile = OS.Path.join(recoveryDir, "recovery.jsonlz4");
+
+let failStateFile = OS.Path.join(sessionBuddyDir, "failStateFile.json");
 
 var WindowListener = {
 	setupBrowserUI: function (window) {
@@ -65,7 +66,29 @@ var WindowListener = {
 	onWindowTitleChange: function (xulWindow, newTitle) {}
 };
 
+var newBackupData;
+
 async function startup(data, reason) {
+	
+	
+	 hhhObserver = {
+		observe: async function (aSubject, aTopic, aData) {
+		// alreadyRestored = false;
+		// windowRestoreSessionManager();
+		console.log("quit-application-requested");
+		console.log(aSubject);
+		console.log(aData);
+		console.log(aTopic);
+		
+		
+		let ssdata = SessionStore.getBrowserState();
+			await OS.File.writeAtomic(failStateFile, ssdata, {
+		encoding: "utf-8"
+		});
+	}
+}
+Services.obs.addObserver(hhhObserver, "quit-application", false);
+	
 
 	// SETUP FOLDERS
 	let SBDDExists = await OS.File.exists(sessionBuddyDir);
@@ -93,15 +116,43 @@ async function startup(data, reason) {
 			});
 		sessionsDataBase = JSON.parse(sessionsDataBaseString);
 	}
-
+	
+	
 	// SETUP MOST RECENT BACKUP SESSION
 	let timeStamp = new Date().getTime();
 	let name = "backup_" + timeStamp;
 	let newBackupFile = OS.Path.join(backupSessionsDir, name);
-	let newBackupData;
-	let origSSExists = await OS.File.exists(origSS);
-	if (!origSSExists) {
-		console.log("origSSexists = true !!!!!!");
+	
+	// let failStateExists = await OS.File.exists(failStateFile);
+	// let origSSExists = await OS.File.exists(origSS);
+	console.log("1 origSS");
+	try {
+	
+		newBackupData = await OS.File.read(origSS, {
+			encoding: "utf-8",
+			compression: "lz4"
+		});
+	} catch(err) {
+		console.log("2 recoveryFile");
+		try {
+			
+			
+			newBackupData = await OS.File.read(recoveryFile, {
+				encoding: "utf-8",
+				compression: "lz4"
+			});
+		} catch(err) {
+			console.log("3 failStateFile");
+			newBackupData = await OS.File.read(failStateFile, {
+				encoding: "utf-8",
+				compression: "lz4"
+			});
+		}
+	}
+	
+	
+/* 	if (!origSSExists) {
+		console.log("origSSexists = DOOESNNNNTTTT NOOO !!!!!!");
 		newBackupData = await OS.File.read(recoveryFile, {
 			encoding: "utf-8",
 			compression: "lz4"
@@ -112,7 +163,7 @@ async function startup(data, reason) {
 			compression: "lz4"
 		});
 	}
-	
+ */	
 	
 	
 	let xxx = JSON.parse(newBackupData);
@@ -147,7 +198,7 @@ async function startup(data, reason) {
 			makeMenu(win);
 	};
 	Services.wm.addListener(WindowListener);
-	
+
 }
 
 function shutdown(data, reason) {
@@ -267,11 +318,8 @@ async function restoreSession(e) {
 };
 
 async function restoreBackupSession() {
-	let data = await OS.File.read(recoveryFile, {
-			encoding: "utf-8",
-			compression: "lz4"
-		});
-	SessionStore.setBrowserState(data);
+	
+	SessionStore.setBrowserState(newBackupData);
 }
 
 async function restoreSessionSelectively(e) {
@@ -455,6 +503,12 @@ async function makeMenu(win) {
 	scws.addEventListener("command", saveCurrentWindowSession, false);
 	menupopup.appendChild(scws);
 
+	let restBack = document.createElement("menuitem");
+	restBack.setAttribute("label", "Restore Previous Session");
+	restBack.addEventListener("command", restoreBackupSession, false);
+	menupopup.appendChild(restBack);
+	
+	
 	let prevSessions = document.createElement("menu");
 	let prevSessionsP = document.createElement("menupopup");
 	prevSessions.setAttribute("label", "Backup Sessions");
@@ -477,30 +531,8 @@ async function makeMenu(win) {
 	};
 	
 	
-	let restBack = document.createElement("menuitem");
-	restBack.setAttribute("label", "Restore Previous Session");
-	restBack.addEventListener("command", restoreBackupSession, false);
-	prevSessionsP.appendChild(restBack);
 
-
-/* 	
-	// add previous session to backup Menu 
-	console.log("HNNNNNNNNNNNNNNNNNNNNNNNNGGGGGG");
-	let previousData = await OS.File.read(recoveryFile, {
-		encoding: "utf-8",
-			compression: "lz4"
-		});
-	let xxx = JSON.parse(previousData);
-	let tabCount = 0;
-	for (let window of xxx.windows) {
-		tabCount += window.tabs.length;
-	}
-	let count = "(" + xxx.windows.length + "/" + tabCount + ")";
-	let date = timeConverter(xxx.session.lastUpdate);
-	
-	let newItem = makeitems2(recoveryFile, "Previous Session "  + date + " " + count ,count, win);
-	prevSessionsP.appendChild(newItem);
- */}
+}
 
 function makeitems2(fileName, name, count, win) {
 
