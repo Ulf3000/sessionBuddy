@@ -208,14 +208,15 @@ function shutdown(data, reason) {
 	let enumerator = Services.wm.getEnumerator("navigator:browser");
 	while (enumerator.hasMoreElements()) {
 		let win = enumerator.getNext();
-		let SessionBuddyMenu = win.document.getElementById("winSessionBuddyMenu");
+		let SessionBuddyMenu = win.document.getElementById("SessionBuddyPopup");
 		SessionBuddyMenu.innerHTML = "";
 		SessionBuddyMenu.parentElement.removeChild(SessionBuddyMenu);
 
-		WindowListener.tearDownBrowserUI(domWindow);
+		//WindowListener.tearDownBrowserUI(domWindow);
+		
 
 	}
-
+	
 	// Stop listening for any new browser windows to open
 	Services.wm.removeListener(WindowListener);
 }
