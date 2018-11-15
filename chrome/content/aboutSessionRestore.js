@@ -328,7 +328,9 @@ function toggleRowChecked(aIx) {
 
 function restoreSingleTab(aIx, aShifted) {
 	var tabbrowser = getBrowserWindow().gBrowser;
-	var newTab = tabbrowser.addTab();
+	var newTab = tabbrowser.addTab("chrome://sessionBuddy/content/restoreSession.xml", {
+			triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+		});
 	var item = gTreeData[aIx];
 
 	var tabState = gStateObject.windows[item.parent.ix]

@@ -1,20 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
--->
 <!DOCTYPE html [ 
-  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
-  %htmlDTD;
-  <!ENTITY % netErrorDTD SYSTEM "chrome://global/locale/netError.dtd">
-  %netErrorDTD;
-  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-  %globalDTD;
+
   <!ENTITY % restorepageDTD SYSTEM "chrome://browser/locale/aboutSessionRestore.dtd">
   %restorepageDTD;
 ]>
 
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <head>
-    <title>&restorepage.tabtitle;</title>
+    <title>"Restore Session Selectively"</title>
     <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" type="text/css" media="all"/>
     <link rel="stylesheet" href="chrome://browser/skin/aboutSessionRestore.css" type="text/css" media="all"/>
     <link rel="icon" type="image/png" href="chrome://global/skin/icons/warning-16.png"/>
@@ -22,16 +15,17 @@
     <script type="application/javascript" src="chrome://sessionBuddy/content/aboutSessionRestore.js"/>
   </head>
 
-  <body dir="&locale.dir;">
+  <body>
 
     <div class="container restore-chosen" style="width:-moz-available;height:-moz-available;">
 
       <div class="title">
-        <h1 class="title-text">Restore Session Selectively</h1>
+        <h1 class="title-text" style="padding:unset;">Restore Session Selectively</h1>
       </div>
 	        <div class="description">
-        <p></p>
-
+			
+			<p>- enable windows and tabs by clicking the checkmarks</p>
+			<p>- restore individual tab by double clicking on it </p>
         <div id="errorLongDesc">
           
           
@@ -43,9 +37,9 @@
               onclick="onListClick(event);" onkeydown="onListKeyDown(event);"
               _window_label="&restorepage.windowLabel;">
           <xul:treecols>
-            <xul:treecol cycler="true" id="restore" type="checkbox" label="&restorepage.restoreHeader;"/>
+            <xul:treecol cycler="true" id="restore" type="checkbox" label="Restore"/>
             <xul:splitter class="tree-splitter"/>
-            <xul:treecol primary="true" id="title" label="&restorepage.listHeader;" flex="1"/>
+            <xul:treecol primary="true" id="title" label="Windows and Tabs" flex="1"/>
           </xul:treecols>
           <xul:treechildren flex="1"/>
         </xul:tree>
@@ -55,11 +49,13 @@
                 id="errorTryAgain"
                 label="Restore"
                 accesskey="R"
+				disabled="true"
                 oncommand="restoreSession();"/>
 		<xul:button class="primary"
                 id="append"
                 label="Append"
                 accesskey="A"
+				disabled="true"
                 oncommand="appendSession();"/>
         <xul:button id="errorCancel"
                 label="Close"
