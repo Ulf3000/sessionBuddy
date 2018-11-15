@@ -331,6 +331,10 @@ async function restoreSessionSelectively(e) {
 	let newTabBrowser = gBrowser.getBrowserForTab(newTab);
 	newTabBrowser.addEventListener("load", function () {
 		let cDoc = newTabBrowser.contentDocument;
+		let restoreButton = cDoc.getElementById("errorTryAgain");
+		restoreButton.removeAttribute("disabled");
+		let appendButton = cDoc.getElementById("append");
+		appendButton.removeAttribute("disabled");
 		console.log(cDoc);
 		let sessionData = cDoc.getElementById("sessionData");
 		console.log(sessionData);
@@ -435,6 +439,7 @@ async function editSession(e) {
 		let name = e.target.name;
 			let oldCount = e.target.count;
 		let saveButton = cDoc.getElementById("errorTryAgain");
+		saveButton.removeAttribute("disabled");
 		let command = "saveSession(" + "'" + name + "'" + ");";
 		console.log(command);
 		saveButton.setAttribute("oncommand", command);
