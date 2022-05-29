@@ -17,6 +17,14 @@ or
 https://forum.mozilla-russia.org/viewtopic.php?id=57048
 (i dont know the origin) 
 
-but i replaced everything with up to date librarys n stuff and added some bells n whistles.. so its also compatible up to ff64 and works together with multiple windows ..
 
-private windows are not saved ! 
+--------
+
+i finally upgraded it for use in firefox 100 (actual) ... 
+
+please use this userchrome loader for legacy addon support in new firefox versions 
+
+https://github.com/xiaoxiaoflood/firefox-scripts
+
+
+this addon is part of my "tab-trio" of addons which i need for a complete workflow ! 
