@@ -11,12 +11,7 @@ it also saves your crashes n backups
 
 small editing functions build in 
 
-based on this userscript: 
-https://github.com/Endor8/userChrome.js/blob/master/simplesessionmanager/SimpleSessionManager.uc.js
-or
-https://forum.mozilla-russia.org/viewtopic.php?id=57048
-(i dont know the origin) 
-
+this addon is part of my "tab-trio" of addons which i need for a complete workflow ! 
 
 --------
 
@@ -27,4 +22,15 @@ please use this userchrome loader for legacy addon support in new firefox versio
 https://github.com/xiaoxiaoflood/firefox-scripts
 
 
-this addon is part of my "tab-trio" of addons which i need for a complete workflow ! 
+--------
+
+
+based on this userscript: 
+https://github.com/Endor8/userChrome.js/blob/master/simplesessionmanager/SimpleSessionManager.uc.js
+or
+https://forum.mozilla-russia.org/viewtopic.php?id=57048
+(i dont know the origin) 
+
+
+
+
