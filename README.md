@@ -1,4 +1,4 @@
-!!!!! ON FF64+ THE BOOTSTRAP.JS IS CACHED , so on upgrade you should delete the startupcache folder in the ff profile folder !!!!!
+!!!!! ON FF64+ THE BOOTSTRAP.JS IS CACHED , so on upgrade you should delete the startupcache folder in the ff profile folder or restart twice ! !!!!!
 
 # sessionBuddy
 simple session manager for waterfox and firefox quantum / xul /classic addon
