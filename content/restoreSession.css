@@ -1,0 +1,13 @@
+.container {
+    min-width: 65% !important;
+    font-size: 12px
+  }
+  
+  .tree-container{
+    min-height: 70vh !important;
+  }
+  
+  #tabList {
+    min-height: inherit !important;
+    max-height: 50em !important;
+  }

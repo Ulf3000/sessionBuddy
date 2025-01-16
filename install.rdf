@@ -3,7 +3,7 @@
 
   <Description about="urn:mozilla:install-manifest">
     <em:id>sessionBuddy@ulf3000</em:id>
-    <em:version>1.4</em:version>
+    <em:version>1.5</em:version>
     <em:type>2</em:type>
 	<em:multiprocessCompatible>true</em:multiprocessCompatible>
 	<em:bootstrap>true</em:bootstrap>
@@ -12,13 +12,13 @@
     <em:targetApplication>
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
-        <em:minVersion>52.*</em:minVersion>
-        <em:maxVersion>64.*</em:maxVersion>
+        <em:minVersion>130.*</em:minVersion>
+        <em:maxVersion>134.*</em:maxVersion>
       </Description>
     </em:targetApplication>
    
     <!-- Front End MetaData -->
-    <em:name>sessionBuddy</em:name>
+    <em:name>sessionBuddy update for ff134</em:name>
     <em:description>simple Session Manager</em:description>
     <em:creator>Ulf3000</em:creator>
     <em:homepageURL></em:homepageURL>

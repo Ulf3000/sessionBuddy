@@ -1,76 +1,38 @@
-const Ci = Components.interfaces;
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource:///modules/sessionstore/SessionStore.jsm");
-Components.utils.import("resource://gre/modules/osfile.jsm");
 
+let appinfo = Services.appinfo;
+let options = {
+	application: appinfo.ID,
+	appversion: appinfo.version,
+	platformversion: appinfo.platformVersion,
+	os: appinfo.OS,
+	osversion: Services.sysinfo.getProperty("version"),
+	abi: appinfo.XPCOMABI
+};
+
+const Cu = Components.utils;
+Cu.importGlobalProperties(['PathUtils']);
+Cu.importGlobalProperties(['IOUtils']);
+const { SessionStore } = ChromeUtils.importESModule("resource:///modules/sessionstore/SessionStore.sys.mjs");
+
+let newBackupData;
 let sessionsDataBase = {};
 sessionsDataBase.backupedSessions = [];
 sessionsDataBase.savedSessions = [];
 
 // ------------------------SETUP FOLDERS------------------------
-let profDir = OS.Constants.Path.profileDir;
-let origSS = OS.Path.join(profDir, "sessionstore.jsonlz4");
-let sessionBuddyDir = OS.Path.join(profDir, "sessionBuddy");
-let sessionDir = OS.Path.join(sessionBuddyDir, "savedSessions");
-let sessionsDataBaseFile = OS.Path.join(sessionBuddyDir, "sessionBuddyDataBase.json");
-let backupSessionsDir = OS.Path.join(sessionBuddyDir, "backupSessions");
-let recoveryDir = OS.Path.join(profDir, "sessionstore-backups");
-let recoveryFile = OS.Path.join(recoveryDir, "recovery.jsonlz4");
 
-let failStateFile = OS.Path.join(sessionBuddyDir, "failStateFile.json");
+let profDir = PathUtils.profileDir;
 
-var WindowListener = {
-	setupBrowserUI: function (window) {
-
-		// Take any steps to add UI or anything to the browser window
-		// document.getElementById() etc. will work here
-	},
-
-	tearDownBrowserUI: function (window) {
-		let document = window.document;
-
-		// Take any steps to remove UI or anything from the browser window
-		// document.getElementById() etc. will work here
-	},
-
-	// nsIWindowMediatorListener functions
-	onOpenWindow: function (xulWindow) {
-		console.log(xulWindow);
-
-		// A new window has opened
-		let domWindow = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-			.getInterface(Ci.nsIDOMWindow);
-
-		// Wait for it to finish loading
-		domWindow.addEventListener("load", function listener() {
-			domWindow.removeEventListener("load", listener, false);
-			console.log("HHHHHHHHHHHHHHHHH");
-
-			// If this is a browser window then setup its UI
-			if (domWindow.document.documentElement.getAttribute("windowtype") == "navigator:browser")
-				//WindowListener.setupBrowserUI(domWindow);
-				if (domWindow.PrivateBrowsingUtils.isWindowPrivate(domWindow) == true)
-					return;
-			Services.obs.addObserver(function observe_BrowserWindow_startup(win, topic) {
-				if (win != domWindow) {
-					return;
-				}
-				console.log("browser-delayed-startup-finished");
-				Services.obs.removeObserver(observe_BrowserWindow_startup, topic);
-				makeMenu(domWindow);
-			}, "browser-delayed-startup-finished");
-		}, false);
-	},
-
-	onCloseWindow: function (xulWindow) { },
-
-	onWindowTitleChange: function (xulWindow, newTitle) { }
-};
-
-var newBackupData;
+let origSS = PathUtils.join(profDir, "sessionstore.jsonlz4");
+let sessionBuddyDir = PathUtils.join(profDir, "sessionBuddy");
+let sessionDir = PathUtils.join(sessionBuddyDir, "savedSessions");
+let sessionsDataBaseFile = PathUtils.join(sessionBuddyDir, "sessionBuddyDataBase.json");
+let backupSessionsDir = PathUtils.join(sessionBuddyDir, "backupSessions");
+let recoveryDir = PathUtils.join(profDir, "sessionstore-backups");
+let recoveryFile = PathUtils.join(recoveryDir, "recovery.jsonlz4");
+let failStateFile = PathUtils.join(sessionBuddyDir, "failStateFile.json");
 
 async function startup(data, reason) {
-
 
 	hhhObserver = {
 		observe: async function (aSubject, aTopic, aData) {
@@ -83,9 +45,7 @@ async function startup(data, reason) {
 
 
 			let ssdata = SessionStore.getBrowserState();
-			await OS.File.writeAtomic(failStateFile, ssdata, {
-				encoding: "utf-8"
-			});
+			await IOUtils.writeUTF8(failStateFile, ssdata);
 		}
 	}
 	Services.obs.addObserver(hhhObserver, "quit-application", false);
@@ -95,45 +55,50 @@ async function startup(data, reason) {
 		observe: async function (aSubject, aTopic, aData) {
 			// alreadyRestored = false;
 			// windowRestoreSessionManager();
-			console.log("quit-application-requested");
 			console.log(aSubject);
 			console.log(aData);
 			console.log(aTopic);
 
 
 			let ssdata = SessionStore.getBrowserState();
-			await OS.File.writeAtomic(failStateFile, ssdata, {
-				encoding: "utf-8"
-			});
+			await IOUtils.writeUTF8(failStateFile, ssdata);
+
+
+			if (aSubject.document.documentElement.getAttribute("windowtype") != "navigator:browser") {
+				console.log("not a browser window");
+				console.log(domWindow.document.documentElement.getAttribute("windowtype"));
+				return;
+			};
+			//await setTimeout(2000);
+			makeMenu(aSubject);
+
+
+
 		}
 	}
 	Services.obs.addObserver(xxObserver, "browser-delayed-startup-finished", false);
 
 
 	// SETUP FOLDERS
-	let SBDDExists = await OS.File.exists(sessionBuddyDir);
+	let SBDDExists = await IOUtils.exists(sessionBuddyDir);
 	if (!SBDDExists) {
-		await OS.File.makeDir(sessionBuddyDir);
+		await IOUtils.makeDirectory(sessionBuddyDir);
 	};
-	let SDExists = await OS.File.exists(sessionDir);
+	let SDExists = await IOUtils.exists(sessionDir);
 	if (!SDExists) {
-		await OS.File.makeDir(sessionDir);
+		await IOUtils.makeDirectory(sessionDir);
 	};
-	let SBExists = await OS.File.exists(backupSessionsDir);
+	let SBExists = await IOUtils.exists(backupSessionsDir);
 	if (!SBExists) {
-		await OS.File.makeDir(backupSessionsDir);
+		await IOUtils.makeDirectory(backupSessionsDir);
 	};
 
 	// SETUP DATABASE
-	let SBDBFExists = await OS.File.exists(sessionsDataBaseFile);
+	let SBDBFExists = await IOUtils.exists(sessionsDataBaseFile);
 	if (!SBDBFExists) {
-		await OS.File.writeAtomic(sessionsDataBaseFile, JSON.stringify(sessionsDataBase), {
-			encoding: "utf-8"
-		});
+		await IOUtils.writeUTF8(sessionsDataBaseFile, JSON.stringify(sessionsDataBase));
 	} else {
-		let sessionsDataBaseString = await OS.File.read(sessionsDataBaseFile, {
-			encoding: "utf-8"
-		});
+		let sessionsDataBaseString = await IOUtils.readUTF8(sessionsDataBaseFile);
 		sessionsDataBase = JSON.parse(sessionsDataBaseString);
 	}
 
@@ -141,46 +106,29 @@ async function startup(data, reason) {
 	// SETUP MOST RECENT BACKUP SESSION
 	let timeStamp = new Date().getTime();
 	let name = "backup_" + timeStamp;
-	let newBackupFile = OS.Path.join(backupSessionsDir, name);
+	let newBackupFile = PathUtils.join(backupSessionsDir, name);
 
 	// let failStateExists = await OS.File.exists(failStateFile);
 	// let origSSExists = await OS.File.exists(origSS);
 	console.log("1 origSS");
 	try {
 
-		newBackupData = await OS.File.read(origSS, {
-			encoding: "utf-8",
+		newBackupData = await IOUtils.readUTF8(origSS, {
+
 			compression: "lz4"
 		});
 	} catch (err) {
 		console.log("2 recoveryFile");
 		try {
-			newBackupData = await OS.File.read(recoveryFile, {
-				encoding: "utf-8",
+			newBackupData = await IOUtils.readUTF8(recoveryFile, {
+
 				compression: "lz4"
 			});
 		} catch (err) {
 			console.log("3 failStateFile");
-			newBackupData = await OS.File.read(failStateFile, {
-				encoding: "utf-8"
-			});
+			newBackupData = await IOUtils.readUTF8(failStateFile);
 		}
 	}
-
-
-	/* 	if (!origSSExists) {
-			console.log("origSSexists = DOOESNNNNTTTT NOOO !!!!!!");
-			newBackupData = await OS.File.read(recoveryFile, {
-				encoding: "utf-8",
-				compression: "lz4"
-			});
-		} else {
-			newBackupData = await OS.File.read(origSS, {
-				encoding: "utf-8",
-				compression: "lz4"
-			});
-		}
-	 */
 
 
 	let xxx = JSON.parse(newBackupData);
@@ -194,55 +142,28 @@ async function startup(data, reason) {
 	entry.date = new Date(xxx.session.lastUpdate).toLocaleString();
 	sessionsDataBase.backupedSessions.push(entry);
 
-	OS.File.writeAtomic(newBackupFile, newBackupData, {
-		encoding: "utf-8"
-	});
+	await IOUtils.writeUTF8(newBackupFile, newBackupData);
 
 	if (sessionsDataBase.backupedSessions.length >= 21) {
-		let pathToRemove = OS.Path.join(backupSessionsDir, sessionsDataBase.backupedSessions[0].name);
+		let pathToRemove = PathUtils.join(backupSessionsDir, sessionsDataBase.backupedSessions[0].name);
 		sessionsDataBase.backupedSessions.splice(0, 1);
-		OS.File.remove(pathToRemove);
+		await IOUtils.remove(pathToRemove);
 	}
-	OS.File.writeAtomic(sessionsDataBaseFile, JSON.stringify(sessionsDataBase), {
-		encoding: "utf-8"
-	});
-
-	// ---------- START UP --------------
-	let enumerator = Services.wm.getEnumerator("navigator:browser");
-	while (enumerator.hasMoreElements()) {
-		let win = enumerator.getNext();
-		if (win.PrivateBrowsingUtils.isWindowPrivate(win) == false)
-			makeMenu(win);
-	};
-	Services.wm.addListener(WindowListener);
+	await IOUtils.writeUTF8(sessionsDataBaseFile, JSON.stringify(sessionsDataBase));
 
 }
 
 function shutdown(data, reason) {
+	console.log("shutdown");
 	// When the application is shutting down we normally don't have to clean
 	// up any UI changes made
 	if (reason == APP_SHUTDOWN)
 		return;
-
-	// Get the list of browser windows already open
-	let enumerator = Services.wm.getEnumerator("navigator:browser");
-	while (enumerator.hasMoreElements()) {
-		let win = enumerator.getNext();
-		let SessionBuddyMenu = win.document.getElementById("SessionBuddyMenu");
-		SessionBuddyMenu.innerHTML = "";
-		SessionBuddyMenu.parentElement.removeChild(SessionBuddyMenu);
-
-		//WindowListener.tearDownBrowserUI(domWindow);
-
-
-	}
-
-	// Stop listening for any new browser windows to open
-	Services.wm.removeListener(WindowListener);
 }
 
 // ------------------------SAVE SESSIONS------------------------
-function saveSession(ssdata) {
+async function saveSession(ssdata) {
+	console.log(ssdata);
 	let xxx = JSON.parse(ssdata);
 	// refuse if private session
 	if (xxx.windows.length == 1 && xxx.windows[0].hasOwnProperty('isPrivate')) {
@@ -269,10 +190,8 @@ function saveSession(ssdata) {
 			return saveSession(ssdata);
 		}
 	}
-	let newFile = OS.Path.join(sessionDir, name);
-	OS.File.writeAtomic(newFile, JSON.stringify(xxx), {
-		encoding: "utf-8"
-	});
+	let newFile = PathUtils.join(sessionDir, name);
+	await IOUtils.writeUTF8(newFile, JSON.stringify(xxx));
 
 	// count tabs and windows in session
 	let tabCount = 0;
@@ -285,9 +204,7 @@ function saveSession(ssdata) {
 	entry.name = name;
 	entry.count = count;
 	sessionsDataBase.savedSessions.push(entry);
-	OS.File.writeAtomic(sessionsDataBaseFile, JSON.stringify(sessionsDataBase), {
-		encoding: "utf-8"
-	});
+	await IOUtils.writeUTF8(sessionsDataBaseFile, JSON.stringify(sessionsDataBase));
 	// update ui
 	let enumerator = Services.wm.getEnumerator("navigator:browser");
 	while (enumerator.hasMoreElements()) {
@@ -304,7 +221,7 @@ function saveCurrentSession() {
 }
 
 function saveCurrentWindowSession() {
-	let ssdata = SessionStore.getWindowState(Services.wm.getMostRecentWindow("navigator:browser"));
+	let ssdata = JSON.stringify(SessionStore.getWindowState(Services.wm.getMostRecentWindow("navigator:browser")));
 	saveSession(ssdata);
 
 }
@@ -313,9 +230,7 @@ function saveCurrentWindowSession() {
 
 async function restoreSession(e) {
 	console.log(e.target);
-	let sessionValue = await OS.File.read(e.target.fileName, {
-		encoding: "utf-8"
-	});
+	let sessionValue = await IOUtils.readUTF8(e.target.fileName);
 
 	if (e.target.restoreType == 2) { // restore Session
 		SessionStore.setBrowserState(sessionValue);
@@ -341,9 +256,7 @@ async function restoreBackupSession() {
 }
 
 async function restoreSessionSelectively(e) {
-	let sessionValue = await OS.File.read(e.target.fileName, {
-		encoding: "utf-8"
-	});
+	let sessionValue = await IOUtils.readUTF8(e.target.fileName);
 	let gBrowser = Services.wm.getMostRecentWindow("navigator:browser").gBrowser;
 	let newTab = gBrowser.addTab("chrome://sessionBuddy/content/restoreSession.xhtml", {
 		triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
@@ -352,12 +265,13 @@ async function restoreSessionSelectively(e) {
 	newTabBrowser.addEventListener("load", function () {
 		let cDoc = newTabBrowser.contentDocument;
 		let restoreButton = cDoc.getElementById("restoreButton");
+		console.log(restoreButton);
 		restoreButton.removeAttribute("disabled");
 		let appendButton = cDoc.getElementById("appendButton");
 		appendButton.removeAttribute("disabled");
 		//console.log(cDoc);
 		let sessionData = cDoc.getElementById("sessionData");
-		console.log(sessionData);
+		console.log(sessionValue);
 		sessionData.value = sessionValue;
 	}, true);
 	gBrowser.selectedTab = newTab;
@@ -391,22 +305,16 @@ async function remove(e) {
 				sessionsDataBase.savedSessions.splice(i, 1);
 			i++;
 		}
-		OS.File.remove(e.target.fileName);
-		OS.File.writeAtomic(sessionsDataBaseFile, JSON.stringify(sessionsDataBase), {
-			encoding: "utf-8"
-		});
+		await IOUtils.remove(e.target.fileName);
+		await IOUtils.writeUTF8(sessionsDataBaseFile, JSON.stringify(sessionsDataBase));
 		let enumerator2 = Services.wm.getEnumerator("navigator:browser");
 		while (enumerator2.hasMoreElements()) {
 			let win = enumerator2.getNext();
 			let SessionBuddyMenu = win.document.getElementById("SessionBuddyMenu");
-			SessionBuddyMenu.innerHTML = "";
+			//SessionBuddyMenu.innerHTML = "";
 			SessionBuddyMenu.parentElement.removeChild(SessionBuddyMenu);
 			makeMenu(win);
-			//WindowListener.tearDownBrowserUI(domWindow);
-
-
 		}
-		
 	}
 }
 
@@ -424,7 +332,7 @@ async function rename(e) {
 			return rename(e);
 		}
 	}
-	let newFileName = OS.Path.join(sessionDir, newName);
+	let newFileName = PathUtils.join(sessionDir, newName);
 
 	let i = 0;
 	for (let entry of sessionsDataBase.savedSessions) {
@@ -435,25 +343,23 @@ async function rename(e) {
 		}
 		i++;
 	}
-	OS.File.copy(oldFileName, newFileName);
-	
+	await IOUtils.copy(oldFileName, newFileName);
 
-	OS.File.writeAtomic(sessionsDataBaseFile, JSON.stringify(sessionsDataBase), {
-		encoding: "utf-8"
-	});
-	OS.File.remove(oldFileName);
+
+	await IOUtils.writeUTF8(sessionsDataBaseFile, JSON.stringify(sessionsDataBase));
+	await IOUtils.remove(oldFileName);
 	let enumerator2 = Services.wm.getEnumerator("navigator:browser");
 	while (enumerator2.hasMoreElements()) {
 		let win = enumerator2.getNext();
 		let SessionBuddyMenu = win.document.getElementById("SessionBuddyMenu");
-		SessionBuddyMenu.innerHTML = "";
+		//SessionBuddyMenu.innerHTML = "";
 		SessionBuddyMenu.parentElement.removeChild(SessionBuddyMenu);
 		makeMenu(win);
 	}
 }
 
 async function editSession(e) {
-	let sessionValue = await OS.File.read(e.target.fileName, {
+	let sessionValue = await IOUtils.readUTF8(e.target.fileName, {
 		encoding: "utf-8"
 	});
 	let gBrowser = Services.wm.getMostRecentWindow("navigator:browser").gBrowser;
@@ -476,7 +382,7 @@ async function editSession(e) {
 		let stateStringContainer = cDoc.getElementById("stateStringContainer");
 
 
-		stateStringContainer.addEventListener("DOMAttrModified", function () {
+		stateStringContainer.addEventListener("DOMAttrModified", async function () {
 			this.removeEventListener('DOMAttrModified', arguments.callee, false);
 			let stateString = decodeURIComponent(stateStringContainer.getAttribute("stateString"));
 			console.log(stateString);
@@ -495,23 +401,19 @@ async function editSession(e) {
 				}
 				i++;
 			}
-			OS.File.writeAtomic(sessionsDataBaseFile, JSON.stringify(sessionsDataBase), {
-				encoding: "utf-8"
-			});
+			await IOUtils.writeUTF8(sessionsDataBaseFile, JSON.stringify(sessionsDataBase));
 
-			OS.File.writeAtomic(filename, JSON.stringify(xxx), {
-				encoding: "utf-8"
-			});
+			await IOUtils.writeUTF8(filename, JSON.stringify(xxx));
 			let enumerator2 = Services.wm.getEnumerator("navigator:browser");
 			while (enumerator2.hasMoreElements()) {
 				let win = enumerator2.getNext();
 				let SessionBuddyMenu = win.document.getElementById("SessionBuddyMenu");
-				SessionBuddyMenu.innerHTML = "";
+				//SessionBuddyMenu.innerHTML = "";
 				SessionBuddyMenu.parentElement.removeChild(SessionBuddyMenu);
 				makeMenu(win);
 			}
 
-			
+
 		}, false);
 	}, true);
 	gBrowser.selectedTab = newTab;
@@ -528,8 +430,6 @@ function elBuilder(doc, tag, props) {
 }
 
 async function makeMenu(win) {
-
-
 
 	let document = win.document;
 
@@ -592,10 +492,10 @@ async function makeMenu(win) {
 
 
 	for (let entry of sessionsDataBase.savedSessions) {
-		makeitems(OS.Path.join(sessionDir, entry.name), entry.name, entry.count, win);
+		makeitems(PathUtils.join(sessionDir, entry.name), entry.name, entry.count, win);
 	};
 	for (let entry of sessionsDataBase.backupedSessions) {
-		let newItem = makeitems2(OS.Path.join(backupSessionsDir, entry.name), entry.date + " " + entry.count, entry.count, win);
+		let newItem = makeitems2(PathUtils.join(backupSessionsDir, entry.name), entry.date + " " + entry.count, entry.count, win);
 		prevSessionsP.appendChild(newItem);
 	};
 
