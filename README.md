@@ -17,13 +17,17 @@ This addon does a few things:
 
    
 
-this addon is part of my "tab-trio" of addons which i need for a complete workflow ! 
+Why should you use this addon over some of the session managers in the addon store ?
+
+- it uses firefox`s internal session api which handles everything from closed tabs, tab history and crash restore
+- that means after session restore with sessionbuddy even the tabhistory and other tab data is restored 1:1
+- this also enables other userscripts and classic addons to attach and retrieve abritrary data to tabbrowser tabs and sessionstore will
+  save and load them accordingly
+- of course its much faster and more cpu friendly and less error prone than webextension api addons, in fact ive been using this addon since 2018 without any error
 
 --------
-please use this userchrome loader for legacy addon support in new firefox versions 
-
+to be able to install you have to use this userchrome loader with legacy addon support in new firefox versions from xiaoxiaoflood
 https://github.com/xiaoxiaoflood/firefox-scripts
-
 
 --------
 
