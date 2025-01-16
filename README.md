@@ -23,7 +23,7 @@ Why should you use this addon over some of the session managers in the addon sto
 - that means after session restore with sessionbuddy even the tabhistory and other tab data is restored 1:1
 - this also enables other userscripts and classic addons to attach and retrieve abritrary data to tabbrowser tabs and sessionstore will
   save and load them accordingly
-- of course its much faster and more cpu friendly and less error prone than webextension api addons, in fact ive been using this addon since 2018 without any error
+- of course its much faster and more cpu friendly and less error prone than webextension api addons, in fact ive been using this addon since 2018 without any error and it restores 100s of tabs in mere seconds 
 
 --------
 to be able to install you have to use this userchrome loader with legacy addon support in new firefox versions from xiaoxiaoflood
