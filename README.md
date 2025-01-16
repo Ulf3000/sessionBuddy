@@ -1,7 +1,8 @@
 # sessionBuddy
 simple session manager for firefox 100+ (tested on ff134)
 
-![grafik](https://github.com/user-attachments/assets/850b1530-a182-4ab6-acf7-3403b2b55221)
+![grafik](https://github.com/user-attachments/assets/85c3f8fc-0e96-444b-90fe-4abf9453ce72)
+
 
 
 
